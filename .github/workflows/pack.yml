@@ -1,0 +1,21 @@
+name: Pack AnyKernel3 Zip
+
+on:
+  workflow_dispatch:
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout AnyKernel3
+        uses: actions/checkout@v4
+
+      - name: Create Flashable Zip
+        run: |
+          zip -r9 Kernel-Rama-5.10.272-X6833B.zip * -x .git .github README.md *placeholder
+
+      - name: Upload Zip Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kernel-Rama-5.10.272-X6833B
+          path: Kernel-Rama-5.10.272-X6833B.zip
