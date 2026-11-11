@@ -7,47 +7,37 @@ jobs:
   pack:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout My Repo (Ambil Image.gz)
+      - name: Checkout My Repo
         uses: actions/checkout@v4
 
-      - name: Clone Latest Official AnyKernel3
+      - name: Verify Image.gz Format
+        run: |
+          file Image.gz
+          # Memastikan Image.gz adalah GZIP murni, bukan tar.gz
+          if file Image.gz | grep -q "tar"; then
+            echo "ERROR: File Image.gz Anda berformat tar.gz! Kompres ulang dengan format gzip murni."
+            exit 1
+          fi
+
+      - name: Clone & Configure Official AnyKernel3
         run: |
           git clone --depth=1 https://github.com ak3_latest
           cp Image.gz ak3_latest/
-
-      - name: Configure anykernel.sh for X6833B
-        run: |
-          cat << 'EOF' > ak3_latest/anykernel.sh
-          ### AnyKernel3 Ramdisk Mod Script
-          ## osm0sis @ xda-developers
-
-          properties() { '
-          kernel.string=Kernel-Rama-5.10.272-X6833B
-          do.devicecheck=0
-          do.modules=0
-          do.systemless=1
-          do.cleanup=1
-          do.cleanuponabort=0
-          '; }
-
-          block=auto;
-          is_slot_device=auto;
-          ramdisk_compression=auto;
-          patch_vbmeta_flag=auto;
-
-          . tools/ak3-core.sh;
-
-          split_boot;
-          flash_boot;
-          EOF
+          
+          # Konfigurasi aman untuk Infinix X6833B (GKI 5.10)
+          sed -i 's/do.devicecheck=1/do.devicecheck=0/g' ak3_latest/anykernel.sh
+          sed -i 's!block=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!block=auto;!g' ak3_latest/anykernel.sh
+          sed -i 's/is_slot_device=0;/is_slot_device=auto;/g' ak3_latest/anykernel.sh
+          sed -i 's/dump_boot;/split_boot;/g' ak3_latest/anykernel.sh
+          sed -i 's/write_boot;/flash_boot;/g' ak3_latest/anykernel.sh
 
       - name: Create Flashable Zip
         run: |
           cd ak3_latest
-          zip -r9 ../Kernel-Rama-5.10.272-X6833B-Fixed.zip * -x .git README.md *placeholder
+          zip -r9 ../Kernel-Rama-5.10.272-X6833B-v2.zip * -x .git README.md *placeholder
 
       - name: Upload Zip Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Kernel-Rama-5.10.272-X6833B-Fixed
-          path: Kernel-Rama-5.10.272-X6833B-Fixed.zip
+          name: Kernel-Rama-5.10.272-X6833B-v2
+          path: Kernel-Rama-5.10.272-X6833B-v2.zip
