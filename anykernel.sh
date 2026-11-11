@@ -4,15 +4,12 @@
 ## AnyKernel setup
 # begin properties
 properties() { '
-kernel.string=Genom Kernel by rama982@telegram
+kernel.string=Kernel-Rama-5.10.272-X6833B
 do.devicecheck=0
 do.modules=0
 do.systemless=1
 do.cleanup=1
 do.cleanuponabort=0
-device.name1=
-supported.versions=
-supported.patchlevels=
 '; } # end properties
 
 # shell variables
@@ -32,7 +29,7 @@ set_perm_recursive 0 0 755 644 $ramdisk/overlay.d/*;
 set_perm_recursive 0 0 750 750 $ramdisk/overlay.d/init* $ramdisk/overlay.d/sbin;
 
 ## AnyKernel boot install
-dump_boot;
+split_boot;
 
 # begin ramdisk changes
 
@@ -40,7 +37,7 @@ dump_boot;
 
 # end ramdisk changes
 
-write_boot;
+flash_boot;
 ## end boot install
 
 
