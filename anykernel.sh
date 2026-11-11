@@ -16,8 +16,8 @@ supported.patchlevels=
 '; } # end properties
 
 # shell variables
-block=/dev/block/platform/bootdevice/by-name/boot;
-is_slot_device=0;
+block=auto;
+is_slot_device=auto;
 ramdisk_compression=auto;
 
 ## AnyKernel methods (DO NOT CHANGE)
