@@ -1,59 +1,53 @@
-# AnyKernel3 Ramdisk Mod Script
-# osm0sis @ xda-developers
+name: Pack AnyKernel3 Zip
 
-## AnyKernel setup
-# begin properties
-properties() { '
-kernel.string=Kernel-Rama-5.10.272-X6833B
-do.devicecheck=0
-do.modules=0
-do.systemless=1
-do.cleanup=1
-do.cleanuponabort=0
-'; } # end properties
+on:
+  workflow_dispatch:
 
-# shell variables
-block=auto;
-is_slot_device=auto;
-ramdisk_compression=auto;
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout My Repo (Ambil Image.gz)
+        uses: actions/checkout@v4
 
-## AnyKernel methods (DO NOT CHANGE)
-# import patching functions/variables - see for reference
-. tools/ak3-core.sh;
+      - name: Clone Latest Official AnyKernel3
+        run: |
+          git clone --depth=1 https://github.com ak3_latest
+          cp Image.gz ak3_latest/
 
-## AnyKernel file attributes
-# set permissions/ownership for included ramdisk files
-set_perm_recursive 0 0 755 644 $ramdisk/*;
-set_perm_recursive 0 0 750 750 $ramdisk/init* $ramdisk/sbin;
-set_perm_recursive 0 0 755 644 $ramdisk/overlay.d/*;
-set_perm_recursive 0 0 750 750 $ramdisk/overlay.d/init* $ramdisk/overlay.d/sbin;
+      - name: Configure anykernel.sh for X6833B
+        run: |
+          cat << 'EOF' > ak3_latest/anykernel.sh
+          ### AnyKernel3 Ramdisk Mod Script
+          ## osm0sis @ xda-developers
 
-## AnyKernel boot install
-split_boot;
+          properties() { '
+          kernel.string=Kernel-Rama-5.10.272-X6833B
+          do.devicecheck=0
+          do.modules=0
+          do.systemless=1
+          do.cleanup=1
+          do.cleanuponabort=0
+          '; }
 
-# begin ramdisk changes
+          block=auto;
+          is_slot_device=auto;
+          ramdisk_compression=auto;
+          patch_vbmeta_flag=auto;
 
-# patch_cmdline androidboot.selinux androidboot.selinux=permissive
+          . tools/ak3-core.sh;
 
-# end ramdisk changes
+          split_boot;
+          flash_boot;
+          EOF
 
-flash_boot;
-## end boot install
+      - name: Create Flashable Zip
+        run: |
+          cd ak3_latest
+          zip -r9 ../Kernel-Rama-5.10.272-X6833B-Fixed.zip * -x .git README.md *placeholder
 
-
-# shell variables
-#block=vendor_boot;
-#is_slot_device=1;
-#ramdisk_compression=auto;
-
-# reset for vendor_boot patching
-#reset_ak;
-
-
-## AnyKernel vendor_boot install
-#split_boot; # skip unpack/repack ramdisk since we don't need vendor_ramdisk access
-
-#flash_boot;
-## end vendor_boot install
-
-
+      - name: Upload Zip Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kernel-Rama-5.10.272-X6833B-Fixed
+          path: Kernel-Rama-5.10.272-X6833B-Fixed.zip
